@@ -41,7 +41,7 @@ namespace Xeus.Core.Exchange
         private LockedHashSet<OmniAddress> _otherNodeAdressess = new LockedHashSet<OmniAddress>();
 
         private volatile byte[] _baseId;
-        private LockedHashDictionary<OmniSecureConnection, SessionInfo> _connections = new LockedHashDictionary<OmniSecureConnection, SessionInfo>();
+        private LockedHashDictionary<OmniSecureConnection, SessionStatus> _connections = new LockedHashDictionary<OmniSecureConnection, SessionStatus>();
         private ReaderWriterLockProvider _connectionLockProvider = new ReaderWriterLockProvider(LockRecursionPolicy.SupportsRecursion);
 
         private List<TaskManager> _connectTaskManagers = new List<TaskManager>();
@@ -54,9 +54,9 @@ namespace Xeus.Core.Exchange
         private List<TaskManager> _dequeueTaskManagers = new List<TaskManager>();
 
         private VolatileHashSet<OmniHash> _pushBlocksRequestSet = new VolatileHashSet<OmniHash>(new TimeSpan(0, 10, 0));
-        private VolatileHashSet<OmniSignature> _pushBroadcastMetadatasRequestSet = new VolatileHashSet<OmniSignature>(new TimeSpan(0, 10, 0));
-        private VolatileHashSet<OmniSignature> _pushUnicastMetadatasRequestSet = new VolatileHashSet<OmniSignature>(new TimeSpan(0, 10, 0));
-        private VolatileHashSet<Channel> _pushMulticastMetadatasRequestSet = new VolatileHashSet<Channel>(new TimeSpan(0, 10, 0));
+        private VolatileHashSet<OmniSignature> _pushBroadcastCluesRequestSet = new VolatileHashSet<OmniSignature>(new TimeSpan(0, 10, 0));
+        private VolatileHashSet<OmniSignature> _pushUnicastCluesRequestSet = new VolatileHashSet<OmniSignature>(new TimeSpan(0, 10, 0));
+        private VolatileHashSet<Channel> _pushMulticastCluesRequestSet = new VolatileHashSet<Channel>(new TimeSpan(0, 10, 0));
 
         private LockedHashSet<UploadBlockInfo> _myUploadBlockInfoSet = new LockedHashSet<UploadBlockInfo>();
         private LockedHashSet<UploadBlockInfo> _otherUploadBlockInfoSet = new LockedHashSet<UploadBlockInfo>();
@@ -385,7 +385,7 @@ namespace Xeus.Core.Exchange
             {
                 if (_connections.Count >= ConnectionCountUpperLimit) return;
 
-                var sessionInfo = new SessionInfo();
+                var sessionInfo = new SessionStatus();
                 sessionInfo.Address = targetAddress;
                 sessionInfo.ThreadId = GetThreadId();
 
@@ -494,9 +494,9 @@ namespace Xeus.Core.Exchange
                         // 古いPushリクエスト情報を削除する。
                         {
                             _pushBlocksRequestSet.Update();
-                            _pushBroadcastMetadatasRequestSet.Update();
-                            _pushUnicastMetadatasRequestSet.Update();
-                            _pushMulticastMetadatasRequestSet.Update();
+                            _pushBroadcastCluesRequestSet.Update();
+                            _pushUnicastCluesRequestSet.Update();
+                            _pushMulticastCluesRequestSet.Update();
                         }
 
                         // 古いセッション情報を破棄する。
@@ -508,7 +508,7 @@ namespace Xeus.Core.Exchange
                         // 長い間通信の無い接続を切断する。
                         foreach (var (connection, sessionInfo) in _connections.ToArray())
                         {
-                            if (sessionInfo.Receive.Stopwatch.BlockResultStopwatch.Elapsed.TotalMinutes < 3) continue;
+                            if (sessionInfo.Receive.Stopwatch.ReceiveBlockStopwatch.Elapsed.TotalMinutes < 3) continue;
 
                             this.RemoveConnection(connection);
                         }
@@ -568,11 +568,11 @@ namespace Xeus.Core.Exchange
                         }
                     }
 
-                    var cloudNodes = new List<NodeInfo<SessionInfo>>();
+                    var cloudNodes = new List<NodeInfo<SessionStatus>>();
                     {
                         foreach (var sessionInfo in _connections.Values.ToArray())
                         {
-                            cloudNodes.Add(new NodeInfo<SessionInfo>(sessionInfo.Id, sessionInfo));
+                            cloudNodes.Add(new NodeInfo<SessionStatus>(sessionInfo.Id, sessionInfo));
                         }
 
                         if (cloudNodes.Count < 3) continue;
@@ -583,8 +583,8 @@ namespace Xeus.Core.Exchange
                     {
                         pushBlockUploadStopwatch.Restart();
 
-                        var diffusionMap = new Dictionary<NodeInfo<SessionInfo>, List<OmniHash>>();
-                        var uploadMap = new Dictionary<NodeInfo<SessionInfo>, List<OmniHash>>();
+                        var diffusionMap = new Dictionary<NodeInfo<SessionStatus>, List<OmniHash>>();
+                        var uploadMap = new Dictionary<NodeInfo<SessionStatus>, List<OmniHash>>();
 
                         foreach (var hash in CollectionHelper.Unite(_diffusionBlockHashes.ToArray(), _uploadBlockHashes.ToArray()).Randomize())
                         {
@@ -687,7 +687,7 @@ namespace Xeus.Core.Exchange
                         {
                             // Link
                             {
-                                var tempMap = new Dictionary<NodeInfo<SessionInfo>, List<OmniHash>>();
+                                var tempMap = new Dictionary<NodeInfo<SessionStatus>, List<OmniHash>>();
 
                                 foreach (var hash in pushBlockLinkSet.Randomize())
                                 {
@@ -719,7 +719,7 @@ namespace Xeus.Core.Exchange
 
                             // Request
                             {
-                                var tempMap = new Dictionary<NodeInfo<SessionInfo>, List<OmniHash>>();
+                                var tempMap = new Dictionary<NodeInfo<SessionStatus>, List<OmniHash>>();
 
                                 foreach (var hash in pushBlockRequestSet.Randomize())
                                 {
@@ -766,30 +766,30 @@ namespace Xeus.Core.Exchange
                     {
                         pushMetadataUploadStopwatch.Restart();
 
-                        // BroadcastMetadata
+                        // BroadcastClue
                         foreach (var signature in _metadataManager.GetBroadcastSignatures())
                         {
                             foreach (var node in RouteTableMethods.Search(_baseId, signature.Id, cloudNodes, 1))
                             {
-                                node.Value.Receive.PulledBroadcastMetadataRequestSet.Add(signature);
+                                node.Value.Receive.PulledBroadcastClueRequestSet.Add(signature);
                             }
                         }
 
-                        // UnicastMetadata
+                        // UnicastClue
                         foreach (var signature in _metadataManager.GetUnicastSignatures())
                         {
                             foreach (var node in RouteTableMethods.Search(_baseId, signature.Id, cloudNodes, 1))
                             {
-                                node.Value.Receive.PulledUnicastMetadataRequestSet.Add(signature);
+                                node.Value.Receive.PulledUnicastClueRequestSet.Add(signature);
                             }
                         }
 
-                        // MulticastMetadata
+                        // MulticastClue
                         foreach (var tag in _metadataManager.GetMulticastTags())
                         {
                             foreach (var node in RouteTableMethods.Search(_baseId, tag.Id, cloudNodes, 1))
                             {
-                                node.Value.Receive.PulledMulticastMetadataRequestSet.Add(tag);
+                                node.Value.Receive.PulledMulticastClueRequestSet.Add(tag);
                             }
                         }
                     }
@@ -799,72 +799,72 @@ namespace Xeus.Core.Exchange
                     {
                         pushMetadataDownloadStopwatch.Restart();
 
-                        var pushBroadcastMetadatasRequestSet = new HashSet<Signature>();
-                        var pushUnicastMetadatasRequestSet = new HashSet<Signature>();
-                        var pushMulticastMetadatasRequestSet = new HashSet<Tag>();
+                        var pushBroadcastCluesRequestSet = new HashSet<Signature>();
+                        var pushUnicastCluesRequestSet = new HashSet<Signature>();
+                        var pushMulticastCluesRequestSet = new HashSet<Tag>();
 
                         {
-                            // BroadcastMetadata
+                            // BroadcastClue
                             {
                                 {
-                                    var list = _pushBroadcastMetadatasRequestSet.ToArray();
+                                    var list = _pushBroadcastCluesRequestSet.ToArray();
                                     random.Shuffle(list);
 
-                                    pushBroadcastMetadatasRequestSet.UnionWith(list.Take(_maxMetadataRequestCount));
+                                    pushBroadcastCluesRequestSet.UnionWith(list.Take(_maxMetadataRequestCount));
                                 }
 
                                 foreach (var node in cloudNodes)
                                 {
-                                    var list = node.Value.Receive.PulledBroadcastMetadataRequestSet.ToArray();
+                                    var list = node.Value.Receive.PulledBroadcastClueRequestSet.ToArray();
                                     random.Shuffle(list);
 
-                                    pushBroadcastMetadatasRequestSet.UnionWith(list.Take(_maxMetadataRequestCount));
+                                    pushBroadcastCluesRequestSet.UnionWith(list.Take(_maxMetadataRequestCount));
                                 }
                             }
 
-                            // UnicastMetadata
+                            // UnicastClue
                             {
                                 {
-                                    var list = _pushUnicastMetadatasRequestSet.ToArray();
+                                    var list = _pushUnicastCluesRequestSet.ToArray();
                                     random.Shuffle(list);
 
-                                    pushUnicastMetadatasRequestSet.UnionWith(list.Take(_maxMetadataRequestCount));
+                                    pushUnicastCluesRequestSet.UnionWith(list.Take(_maxMetadataRequestCount));
                                 }
 
                                 foreach (var node in cloudNodes)
                                 {
-                                    var list = node.Value.Receive.PulledUnicastMetadataRequestSet.ToArray();
+                                    var list = node.Value.Receive.PulledUnicastClueRequestSet.ToArray();
                                     random.Shuffle(list);
 
-                                    pushUnicastMetadatasRequestSet.UnionWith(list.Take(_maxMetadataRequestCount));
+                                    pushUnicastCluesRequestSet.UnionWith(list.Take(_maxMetadataRequestCount));
                                 }
                             }
 
-                            // MulticastMetadata
+                            // MulticastClue
                             {
                                 {
-                                    var list = _pushMulticastMetadatasRequestSet.ToArray();
+                                    var list = _pushMulticastCluesRequestSet.ToArray();
                                     random.Shuffle(list);
 
-                                    pushMulticastMetadatasRequestSet.UnionWith(list.Take(_maxMetadataRequestCount));
+                                    pushMulticastCluesRequestSet.UnionWith(list.Take(_maxMetadataRequestCount));
                                 }
 
                                 foreach (var node in cloudNodes)
                                 {
-                                    var list = node.Value.Receive.PulledMulticastMetadataRequestSet.ToArray();
+                                    var list = node.Value.Receive.PulledMulticastClueRequestSet.ToArray();
                                     random.Shuffle(list);
 
-                                    pushMulticastMetadatasRequestSet.UnionWith(list.Take(_maxMetadataRequestCount));
+                                    pushMulticastCluesRequestSet.UnionWith(list.Take(_maxMetadataRequestCount));
                                 }
                             }
                         }
 
                         {
-                            // BroadcastMetadata
+                            // BroadcastClue
                             {
-                                var tempMap = new Dictionary<NodeInfo<SessionInfo>, List<Signature>>();
+                                var tempMap = new Dictionary<NodeInfo<SessionStatus>, List<Signature>>();
 
-                                foreach (var signature in pushBroadcastMetadatasRequestSet.Randomize())
+                                foreach (var signature in pushBroadcastCluesRequestSet.Randomize())
                                 {
                                     foreach (var node in RouteTableMethods.Search(_baseId, signature.Id, cloudNodes, 3))
                                     {
@@ -876,23 +876,23 @@ namespace Xeus.Core.Exchange
                                 {
                                     random.Shuffle(targets);
 
-                                    lock (node.Value.Send.PushBroadcastMetadataRequestQueue.LockObject)
+                                    lock (node.Value.Send.PushBroadcastClueRequestQueue.LockObject)
                                     {
-                                        node.Value.Send.PushBroadcastMetadataRequestQueue.Clear();
+                                        node.Value.Send.PushBroadcastClueRequestQueue.Clear();
 
                                         foreach (var signature in targets.Take(_maxMetadataRequestCount))
                                         {
-                                            node.Value.Send.PushBroadcastMetadataRequestQueue.Enqueue(signature);
+                                            node.Value.Send.PushBroadcastClueRequestQueue.Enqueue(signature);
                                         }
                                     }
                                 }
                             }
 
-                            // UnicastMetadata
+                            // UnicastClue
                             {
-                                var tempMap = new Dictionary<NodeInfo<SessionInfo>, List<Signature>>();
+                                var tempMap = new Dictionary<NodeInfo<SessionStatus>, List<Signature>>();
 
-                                foreach (var signature in pushUnicastMetadatasRequestSet.Randomize())
+                                foreach (var signature in pushUnicastCluesRequestSet.Randomize())
                                 {
                                     foreach (var node in RouteTableMethods.Search(_baseId, signature.Id, cloudNodes, 3))
                                     {
@@ -904,23 +904,23 @@ namespace Xeus.Core.Exchange
                                 {
                                     random.Shuffle(targets);
 
-                                    lock (node.Value.Send.PushUnicastMetadataRequestQueue.LockObject)
+                                    lock (node.Value.Send.PushUnicastClueRequestQueue.LockObject)
                                     {
-                                        node.Value.Send.PushUnicastMetadataRequestQueue.Clear();
+                                        node.Value.Send.PushUnicastClueRequestQueue.Clear();
 
                                         foreach (var signature in targets.Take(_maxMetadataRequestCount))
                                         {
-                                            node.Value.Send.PushUnicastMetadataRequestQueue.Enqueue(signature);
+                                            node.Value.Send.PushUnicastClueRequestQueue.Enqueue(signature);
                                         }
                                     }
                                 }
                             }
 
-                            // MulticastMetadata
+                            // MulticastClue
                             {
-                                var tempMap = new Dictionary<NodeInfo<SessionInfo>, List<Tag>>();
+                                var tempMap = new Dictionary<NodeInfo<SessionStatus>, List<Tag>>();
 
-                                foreach (var tag in pushMulticastMetadatasRequestSet.Randomize())
+                                foreach (var tag in pushMulticastCluesRequestSet.Randomize())
                                 {
                                     foreach (var node in RouteTableMethods.Search(_baseId, tag.Id, cloudNodes, 3))
                                     {
@@ -932,13 +932,13 @@ namespace Xeus.Core.Exchange
                                 {
                                     random.Shuffle(targets);
 
-                                    lock (node.Value.Send.PushMulticastMetadataRequestQueue.LockObject)
+                                    lock (node.Value.Send.PushMulticastClueRequestQueue.LockObject)
                                     {
-                                        node.Value.Send.PushMulticastMetadataRequestQueue.Clear();
+                                        node.Value.Send.PushMulticastClueRequestQueue.Clear();
 
                                         foreach (var tag in targets.Take(_maxMetadataRequestCount))
                                         {
-                                            node.Value.Send.PushMulticastMetadataRequestQueue.Enqueue(tag);
+                                            node.Value.Send.PushMulticastClueRequestQueue.Enqueue(tag);
                                         }
                                     }
                                 }
@@ -1063,7 +1063,7 @@ namespace Xeus.Core.Exchange
             }
         }
 
-        private Stream GetSendStream(SessionInfo sessionInfo)
+        private Stream GetSendStream(SessionStatus sessionInfo)
         {
             try
             {
@@ -1214,186 +1214,186 @@ namespace Xeus.Core.Exchange
                             }
                         }
                     }
-                    else if (sessionInfo.Send.PushBroadcastMetadataRequestQueue.Count > 0)
+                    else if (sessionInfo.Send.PushBroadcastClueRequestQueue.Count > 0)
                     {
-                        BroadcastMetadatasRequestPacket packet;
+                        BroadcastCluesRequestPacket packet;
 
-                        lock (sessionInfo.Send.PushBroadcastMetadataRequestQueue.LockObject)
+                        lock (sessionInfo.Send.PushBroadcastClueRequestQueue.LockObject)
                         {
-                            packet = new BroadcastMetadatasRequestPacket(sessionInfo.Send.PushBroadcastMetadataRequestQueue.ToArray());
-                            sessionInfo.Send.PushBroadcastMetadataRequestQueue.Clear();
+                            packet = new BroadcastCluesRequestPacket(sessionInfo.Send.PushBroadcastClueRequestQueue.ToArray());
+                            sessionInfo.Send.PushBroadcastClueRequestQueue.Clear();
                         }
 
                         Stream typeStream = new RecyclableMemoryStream(_bufferPool);
-                        Varint.SetUInt64(typeStream, (uint)MessageId.BroadcastMetadatasRequest);
+                        Varint.SetUInt64(typeStream, (uint)MessageId.BroadcastCluesRequest);
 
                         _status.PushMessageRequestCount.Add(packet.Signatures.Count());
 
-                        Debug.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " ExchangeManager: Send BroadcastMetadataRequest");
+                        Debug.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " ExchangeManager: Send BroadcastClueRequest");
 
                         return new UniteStream(typeStream, packet.Export(_bufferPool));
                     }
-                    else if (sessionInfo.Send.BroadcastMetadataResultStopwatch.Elapsed.TotalSeconds > 30)
+                    else if (sessionInfo.Send.BroadcastClueResultStopwatch.Elapsed.TotalSeconds > 30)
                     {
-                        sessionInfo.Send.BroadcastMetadataResultStopwatch.Restart();
+                        sessionInfo.Send.BroadcastClueResultStopwatch.Restart();
 
                         var random = RandomProvider.GetThreadRandom();
 
-                        var broadcastMetadatas = new List<BroadcastMetadata>();
+                        var BroadcastClues = new List<BroadcastClue>();
 
                         var signatures = new List<Signature>();
 
-                        lock (sessionInfo.Receive.PulledBroadcastMetadataRequestSet.LockObject)
+                        lock (sessionInfo.Receive.PulledBroadcastClueRequestSet.LockObject)
                         {
-                            signatures.AddRange(sessionInfo.Receive.PulledBroadcastMetadataRequestSet);
+                            signatures.AddRange(sessionInfo.Receive.PulledBroadcastClueRequestSet);
                         }
 
                         random.Shuffle(signatures);
 
                         foreach (var signature in signatures)
                         {
-                            foreach (var metadata in _metadataManager.GetBroadcastMetadatas(signature).Randomize())
+                            foreach (var metadata in _metadataManager.GetBroadcastClues(signature).Randomize())
                             {
-                                broadcastMetadatas.Add(metadata);
+                                BroadcastClues.Add(metadata);
 
-                                if (broadcastMetadatas.Count >= _maxMetadataResultCount) goto End;
+                                if (BroadcastClues.Count >= _maxMetadataResultCount) goto End;
                             }
                         }
 
                         End:;
 
-                        if (broadcastMetadatas.Count > 0)
+                        if (BroadcastClues.Count > 0)
                         {
-                            var packet = new BroadcastMetadatasResultPacket(broadcastMetadatas);
+                            var packet = new BroadcastCluesResultPacket(BroadcastClues);
 
                             Stream typeStream = new RecyclableMemoryStream(_bufferPool);
-                            Varint.SetUInt64(typeStream, (uint)MessageId.BroadcastMetadatasResult);
+                            Varint.SetUInt64(typeStream, (uint)MessageId.BroadcastCluesResult);
 
-                            _status.PushMessageResultCount.Add(packet.BroadcastMetadatas.Count());
+                            _status.PushMessageResultCount.Add(packet.BroadcastClues.Count());
 
                             Debug.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " ExchangeManager: Send MetadataResult");
 
                             return new UniteStream(typeStream, packet.Export(_bufferPool));
                         }
                     }
-                    else if (sessionInfo.Send.PushUnicastMetadataRequestQueue.Count > 0)
+                    else if (sessionInfo.Send.PushUnicastClueRequestQueue.Count > 0)
                     {
-                        UnicastMetadatasRequestPacket packet;
+                        UnicastCluesRequestPacket packet;
 
-                        lock (sessionInfo.Send.PushUnicastMetadataRequestQueue.LockObject)
+                        lock (sessionInfo.Send.PushUnicastClueRequestQueue.LockObject)
                         {
-                            packet = new UnicastMetadatasRequestPacket(sessionInfo.Send.PushUnicastMetadataRequestQueue.ToArray());
-                            sessionInfo.Send.PushUnicastMetadataRequestQueue.Clear();
+                            packet = new UnicastCluesRequestPacket(sessionInfo.Send.PushUnicastClueRequestQueue.ToArray());
+                            sessionInfo.Send.PushUnicastClueRequestQueue.Clear();
                         }
 
                         Stream typeStream = new RecyclableMemoryStream(_bufferPool);
-                        Varint.SetUInt64(typeStream, (uint)MessageId.UnicastMetadatasRequest);
+                        Varint.SetUInt64(typeStream, (uint)MessageId.UnicastCluesRequest);
 
                         _status.PushMessageRequestCount.Add(packet.Signatures.Count());
 
-                        Debug.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " ExchangeManager: Send UnicastMetadataRequest");
+                        Debug.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " ExchangeManager: Send UnicastClueRequest");
 
                         return new UniteStream(typeStream, packet.Export(_bufferPool));
                     }
-                    else if (sessionInfo.Send.UnicastMetadataResultStopwatch.Elapsed.TotalSeconds > 30)
+                    else if (sessionInfo.Send.UnicastClueResultStopwatch.Elapsed.TotalSeconds > 30)
                     {
-                        sessionInfo.Send.UnicastMetadataResultStopwatch.Restart();
+                        sessionInfo.Send.UnicastClueResultStopwatch.Restart();
 
                         var random = RandomProvider.GetThreadRandom();
 
-                        var UnicastMetadatas = new List<UnicastMetadata>();
+                        var UnicastClues = new List<UnicastClue>();
 
                         var signatures = new List<Signature>();
 
-                        lock (sessionInfo.Receive.PulledUnicastMetadataRequestSet.LockObject)
+                        lock (sessionInfo.Receive.PulledUnicastClueRequestSet.LockObject)
                         {
-                            signatures.AddRange(sessionInfo.Receive.PulledUnicastMetadataRequestSet);
+                            signatures.AddRange(sessionInfo.Receive.PulledUnicastClueRequestSet);
                         }
 
                         random.Shuffle(signatures);
 
                         foreach (var signature in signatures)
                         {
-                            foreach (var metadata in _metadataManager.GetUnicastMetadatas(signature).Randomize())
+                            foreach (var metadata in _metadataManager.GetUnicastClues(signature).Randomize())
                             {
-                                UnicastMetadatas.Add(metadata);
+                                UnicastClues.Add(metadata);
 
-                                if (UnicastMetadatas.Count >= _maxMetadataResultCount) goto End;
+                                if (UnicastClues.Count >= _maxMetadataResultCount) goto End;
                             }
                         }
 
                         End:;
 
-                        if (UnicastMetadatas.Count > 0)
+                        if (UnicastClues.Count > 0)
                         {
-                            var packet = new UnicastMetadatasResultPacket(UnicastMetadatas);
+                            var packet = new UnicastCluesResultPacket(UnicastClues);
 
                             Stream typeStream = new RecyclableMemoryStream(_bufferPool);
-                            Varint.SetUInt64(typeStream, (uint)MessageId.UnicastMetadatasResult);
+                            Varint.SetUInt64(typeStream, (uint)MessageId.UnicastCluesResult);
 
-                            _status.PushMessageResultCount.Add(packet.UnicastMetadatas.Count());
+                            _status.PushMessageResultCount.Add(packet.UnicastClues.Count());
 
                             Debug.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " ExchangeManager: Send MetadataResult");
 
                             return new UniteStream(typeStream, packet.Export(_bufferPool));
                         }
                     }
-                    else if (sessionInfo.Send.PushMulticastMetadataRequestQueue.Count > 0)
+                    else if (sessionInfo.Send.PushMulticastClueRequestQueue.Count > 0)
                     {
-                        MulticastMetadatasRequestPacket packet;
+                        MulticastCluesRequestPacket packet;
 
-                        lock (sessionInfo.Send.PushMulticastMetadataRequestQueue.LockObject)
+                        lock (sessionInfo.Send.PushMulticastClueRequestQueue.LockObject)
                         {
-                            packet = new MulticastMetadatasRequestPacket(sessionInfo.Send.PushMulticastMetadataRequestQueue.ToArray());
-                            sessionInfo.Send.PushMulticastMetadataRequestQueue.Clear();
+                            packet = new MulticastCluesRequestPacket(sessionInfo.Send.PushMulticastClueRequestQueue.ToArray());
+                            sessionInfo.Send.PushMulticastClueRequestQueue.Clear();
                         }
 
                         Stream typeStream = new RecyclableMemoryStream(_bufferPool);
-                        Varint.SetUInt64(typeStream, (uint)MessageId.MulticastMetadatasRequest);
+                        Varint.SetUInt64(typeStream, (uint)MessageId.MulticastCluesRequest);
 
                         _status.PushMessageRequestCount.Add(packet.Tags.Count());
 
-                        Debug.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " ExchangeManager: Send MulticastMetadataRequest");
+                        Debug.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " ExchangeManager: Send MulticastClueRequest");
 
                         return new UniteStream(typeStream, packet.Export(_bufferPool));
                     }
-                    else if (sessionInfo.Send.MulticastMetadataResultStopwatch.Elapsed.TotalSeconds > 30)
+                    else if (sessionInfo.Send.MulticastClueResultStopwatch.Elapsed.TotalSeconds > 30)
                     {
-                        sessionInfo.Send.MulticastMetadataResultStopwatch.Restart();
+                        sessionInfo.Send.MulticastClueResultStopwatch.Restart();
 
                         var random = RandomProvider.GetThreadRandom();
 
-                        var MulticastMetadatas = new List<MulticastMetadata>();
+                        var MulticastClues = new List<MulticastClue>();
 
                         var tags = new List<Tag>();
 
-                        lock (sessionInfo.Receive.PulledMulticastMetadataRequestSet.LockObject)
+                        lock (sessionInfo.Receive.PulledMulticastClueRequestSet.LockObject)
                         {
-                            tags.AddRange(sessionInfo.Receive.PulledMulticastMetadataRequestSet);
+                            tags.AddRange(sessionInfo.Receive.PulledMulticastClueRequestSet);
                         }
 
                         random.Shuffle(tags);
 
                         foreach (var tag in tags)
                         {
-                            foreach (var metadata in _metadataManager.GetMulticastMetadatas(tag).Randomize())
+                            foreach (var metadata in _metadataManager.GetMulticastClues(tag).Randomize())
                             {
-                                MulticastMetadatas.Add(metadata);
+                                MulticastClues.Add(metadata);
 
-                                if (MulticastMetadatas.Count >= _maxMetadataResultCount) goto End;
+                                if (MulticastClues.Count >= _maxMetadataResultCount) goto End;
                             }
                         }
 
                         End:;
 
-                        if (MulticastMetadatas.Count > 0)
+                        if (MulticastClues.Count > 0)
                         {
-                            var packet = new MulticastMetadatasResultPacket(MulticastMetadatas);
+                            var packet = new MulticastCluesResultPacket(MulticastClues);
 
                             Stream typeStream = new RecyclableMemoryStream(_bufferPool);
-                            Varint.SetUInt64(typeStream, (uint)MessageId.MulticastMetadatasResult);
+                            Varint.SetUInt64(typeStream, (uint)MessageId.MulticastCluesResult);
 
-                            _status.PushMessageResultCount.Add(packet.MulticastMetadatas.Count());
+                            _status.PushMessageResultCount.Add(packet.MulticastClues.Count());
 
                             Debug.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " ExchangeManager: Send MetadataResult");
 
@@ -1414,7 +1414,7 @@ namespace Xeus.Core.Exchange
             return null;
         }
 
-        private void SetReceiveStream(SessionInfo sessionInfo, Stream stream)
+        private void SetReceiveStream(SessionStatus sessionInfo, Stream stream)
         {
             try
             {
@@ -1533,89 +1533,89 @@ namespace Xeus.Core.Exchange
 
                             Debug.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " ExchangeManager: Receive BlockResult " + NetworkConverter.ToBase64UrlString(packet.OmniHash.Value));
                         }
-                        else if (id == (int)MessageId.BroadcastMetadatasRequest)
+                        else if (id == (int)MessageId.BroadcastCluesRequest)
                         {
-                            var packet = BroadcastMetadatasRequestPacket.Import(dataStream, _bufferPool);
+                            var packet = BroadcastCluesRequestPacket.Import(dataStream, _bufferPool);
 
-                            if (sessionInfo.Receive.PulledBroadcastMetadataRequestSet.Count + packet.Signatures.Count()
-                                > _maxMetadataRequestCount * sessionInfo.Receive.PulledBroadcastMetadataRequestSet.SurvivalTime.TotalMinutes * 2) return;
+                            if (sessionInfo.Receive.PulledBroadcastClueRequestSet.Count + packet.Signatures.Count()
+                                > _maxMetadataRequestCount * sessionInfo.Receive.PulledBroadcastClueRequestSet.SurvivalTime.TotalMinutes * 2) return;
 
-                            sessionInfo.Receive.PulledBroadcastMetadataRequestSet.UnionWith(packet.Signatures);
+                            sessionInfo.Receive.PulledBroadcastClueRequestSet.UnionWith(packet.Signatures);
 
                             _status.PullMessageRequestCount.Add(packet.Signatures.Count());
 
-                            Debug.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " ExchangeManager: Receive BroadcastMetadatasRequest");
+                            Debug.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " ExchangeManager: Receive BroadcastCluesRequest");
                         }
-                        else if (id == (int)MessageId.BroadcastMetadatasResult)
+                        else if (id == (int)MessageId.BroadcastCluesResult)
                         {
-                            var packet = BroadcastMetadatasResultPacket.Import(dataStream, _bufferPool);
+                            var packet = BroadcastCluesResultPacket.Import(dataStream, _bufferPool);
 
-                            if (packet.BroadcastMetadatas.Count() > _maxMetadataResultCount) return;
+                            if (packet.BroadcastClues.Count() > _maxMetadataResultCount) return;
 
-                            _status.PullMessageResultCount.Add(packet.BroadcastMetadatas.Count());
+                            _status.PullMessageResultCount.Add(packet.BroadcastClues.Count());
 
-                            foreach (var metadata in packet.BroadcastMetadatas)
+                            foreach (var metadata in packet.BroadcastClues)
                             {
                                 _metadataManager.SetMetadata(metadata);
                             }
 
-                            Debug.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " ExchangeManager: Receive BroadcastMetadatasResult");
+                            Debug.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " ExchangeManager: Receive BroadcastCluesResult");
                         }
-                        else if (id == (int)MessageId.UnicastMetadatasRequest)
+                        else if (id == (int)MessageId.UnicastCluesRequest)
                         {
-                            var packet = UnicastMetadatasRequestPacket.Import(dataStream, _bufferPool);
+                            var packet = UnicastCluesRequestPacket.Import(dataStream, _bufferPool);
 
-                            if (sessionInfo.Receive.PulledUnicastMetadataRequestSet.Count + packet.Signatures.Count()
-                                > _maxMetadataRequestCount * sessionInfo.Receive.PulledUnicastMetadataRequestSet.SurvivalTime.TotalMinutes * 2) return;
+                            if (sessionInfo.Receive.PulledUnicastClueRequestSet.Count + packet.Signatures.Count()
+                                > _maxMetadataRequestCount * sessionInfo.Receive.PulledUnicastClueRequestSet.SurvivalTime.TotalMinutes * 2) return;
 
-                            sessionInfo.Receive.PulledUnicastMetadataRequestSet.UnionWith(packet.Signatures);
+                            sessionInfo.Receive.PulledUnicastClueRequestSet.UnionWith(packet.Signatures);
 
                             _status.PullMessageRequestCount.Add(packet.Signatures.Count());
 
-                            Debug.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " ExchangeManager: Receive UnicastMetadatasRequest");
+                            Debug.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " ExchangeManager: Receive UnicastCluesRequest");
                         }
-                        else if (id == (int)MessageId.UnicastMetadatasResult)
+                        else if (id == (int)MessageId.UnicastCluesResult)
                         {
-                            var packet = UnicastMetadatasResultPacket.Import(dataStream, _bufferPool);
+                            var packet = UnicastCluesResultPacket.Import(dataStream, _bufferPool);
 
-                            if (packet.UnicastMetadatas.Count() > _maxMetadataResultCount) return;
+                            if (packet.UnicastClues.Count() > _maxMetadataResultCount) return;
 
-                            _status.PullMessageResultCount.Add(packet.UnicastMetadatas.Count());
+                            _status.PullMessageResultCount.Add(packet.UnicastClues.Count());
 
-                            foreach (var metadata in packet.UnicastMetadatas)
+                            foreach (var metadata in packet.UnicastClues)
                             {
                                 _metadataManager.SetMetadata(metadata);
                             }
 
-                            Debug.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " ExchangeManager: Receive UnicastMetadatasResult");
+                            Debug.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " ExchangeManager: Receive UnicastCluesResult");
                         }
-                        else if (id == (int)MessageId.MulticastMetadatasRequest)
+                        else if (id == (int)MessageId.MulticastCluesRequest)
                         {
-                            var packet = MulticastMetadatasRequestPacket.Import(dataStream, _bufferPool);
+                            var packet = MulticastCluesRequestPacket.Import(dataStream, _bufferPool);
 
-                            if (sessionInfo.Receive.PulledMulticastMetadataRequestSet.Count + packet.Tags.Count()
-                                > _maxMetadataRequestCount * sessionInfo.Receive.PulledMulticastMetadataRequestSet.SurvivalTime.TotalMinutes * 2) return;
+                            if (sessionInfo.Receive.PulledMulticastClueRequestSet.Count + packet.Tags.Count()
+                                > _maxMetadataRequestCount * sessionInfo.Receive.PulledMulticastClueRequestSet.SurvivalTime.TotalMinutes * 2) return;
 
-                            sessionInfo.Receive.PulledMulticastMetadataRequestSet.UnionWith(packet.Tags);
+                            sessionInfo.Receive.PulledMulticastClueRequestSet.UnionWith(packet.Tags);
 
                             _status.PullMessageRequestCount.Add(packet.Tags.Count());
 
-                            Debug.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " ExchangeManager: Receive MulticastMetadatasRequest");
+                            Debug.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " ExchangeManager: Receive MulticastCluesRequest");
                         }
-                        else if (id == (int)MessageId.MulticastMetadatasResult)
+                        else if (id == (int)MessageId.MulticastCluesResult)
                         {
-                            var packet = MulticastMetadatasResultPacket.Import(dataStream, _bufferPool);
+                            var packet = MulticastCluesResultPacket.Import(dataStream, _bufferPool);
 
-                            if (packet.MulticastMetadatas.Count() > _maxMetadataResultCount) return;
+                            if (packet.MulticastClues.Count() > _maxMetadataResultCount) return;
 
-                            _status.PullMessageResultCount.Add(packet.MulticastMetadatas.Count());
+                            _status.PullMessageResultCount.Add(packet.MulticastClues.Count());
 
-                            foreach (var metadata in packet.MulticastMetadatas)
+                            foreach (var metadata in packet.MulticastClues)
                             {
                                 _metadataManager.SetMetadata(metadata);
                             }
 
-                            Debug.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " ExchangeManager: Receive MulticastMetadatasResult");
+                            Debug.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " ExchangeManager: Receive MulticastCluesResult");
                         }
                     }
                 }
@@ -1640,40 +1640,40 @@ namespace Xeus.Core.Exchange
             _pushBlocksRequestSet.UnionWith(hashes);
         }
 
-        public void UploadMetadata(BroadcastMetadata metadata)
+        public void UploadMetadata(BroadcastClue metadata)
         {
             _metadataManager.SetMetadata(metadata);
         }
 
-        public void UploadMetadata(UnicastMetadata metadata)
+        public void UploadMetadata(UnicastClue metadata)
         {
             _metadataManager.SetMetadata(metadata);
         }
 
-        public void UploadMetadata(MulticastMetadata metadata)
+        public void UploadMetadata(MulticastClue metadata)
         {
             _metadataManager.SetMetadata(metadata);
         }
 
-        public BroadcastMetadata GetBroadcastMetadata(Signature signature, string type)
+        public BroadcastClue GetBroadcastClue(Signature signature, string type)
         {
-            _pushBroadcastMetadatasRequestSet.Add(signature);
+            _pushBroadcastCluesRequestSet.Add(signature);
 
-            return _metadataManager.GetBroadcastMetadata(signature, type);
+            return _metadataManager.GetBroadcastClue(signature, type);
         }
 
-        public IEnumerable<UnicastMetadata> GetUnicastMetadatas(Signature signature, string type)
+        public IEnumerable<UnicastClue> GetUnicastClues(Signature signature, string type)
         {
-            _pushUnicastMetadatasRequestSet.Add(signature);
+            _pushUnicastCluesRequestSet.Add(signature);
 
-            return _metadataManager.GetUnicastMetadatas(signature, type);
+            return _metadataManager.GetUnicastClues(signature, type);
         }
 
-        public IEnumerable<MulticastMetadata> GetMulticastMetadatas(Tag tag, string type)
+        public IEnumerable<MulticastClue> GetMulticastClues(Tag tag, string type)
         {
-            _pushMulticastMetadatasRequestSet.Add(tag);
+            _pushMulticastCluesRequestSet.Add(tag);
 
-            return _metadataManager.GetMulticastMetadatas(tag, type);
+            return _metadataManager.GetMulticastClues(tag, type);
         }
 
         public void DiffuseContent(string path)
@@ -1768,17 +1768,17 @@ namespace Xeus.Core.Exchange
 
                 // MetadataManager
                 {
-                    foreach (var metadata in _settings.Load("BroadcastMetadatas", () => Array.Empty<BroadcastMetadata>()))
+                    foreach (var metadata in _settings.Load("BroadcastClues", () => Array.Empty<BroadcastClue>()))
                     {
                         _metadataManager.SetMetadata(metadata);
                     }
 
-                    foreach (var metadata in _settings.Load("UnicastMetadatas", () => Array.Empty<UnicastMetadata>()))
+                    foreach (var metadata in _settings.Load("UnicastClues", () => Array.Empty<UnicastClue>()))
                     {
                         _metadataManager.SetMetadata(metadata);
                     }
 
-                    foreach (var metadata in _settings.Load("MulticastMetadatas", () => Array.Empty<MulticastMetadata>()))
+                    foreach (var metadata in _settings.Load("MulticastClues", () => Array.Empty<MulticastClue>()))
                     {
                         _metadataManager.SetMetadata(metadata);
                     }
@@ -1801,9 +1801,9 @@ namespace Xeus.Core.Exchange
 
                 // MetadataManager
                 {
-                    _settings.Save("BroadcastMetadatas", _metadataManager.GetBroadcastMetadatas());
-                    _settings.Save("UnicastMetadatas", _metadataManager.GetUnicastMetadatas());
-                    _settings.Save("MulticastMetadatas", _metadataManager.GetMulticastMetadatas());
+                    _settings.Save("BroadcastClues", _metadataManager.GetBroadcastClues());
+                    _settings.Save("UnicastClues", _metadataManager.GetUnicastClues());
+                    _settings.Save("MulticastClues", _metadataManager.GetMulticastClues());
                 }
 
                 _settings.Save("UploadBlockHashes", _uploadBlockHashes);

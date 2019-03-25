@@ -70,33 +70,33 @@ namespace Xeus.Core.Contents.Internal
 
                 // Write property count
                 {
-                    int propertyCount = 0;
+                    uint propertyCount = 0;
                     if (value.Sectors.Count != 0) propertyCount++;
                     if (value.Length != default) propertyCount++;
                     if (value.LastAccessTime != default) propertyCount++;
-                    w.Write((ulong)propertyCount);
+                    w.Write(propertyCount);
                 }
 
                 // Sectors
                 if (value.Sectors.Count != 0)
                 {
-                    w.Write((ulong)0);
-                    w.Write((ulong)value.Sectors.Count);
+                    w.Write((uint)0);
+                    w.Write((uint)value.Sectors.Count);
                     foreach (var n in value.Sectors)
                     {
-                        w.Write((ulong)n);
+                        w.Write(n);
                     }
                 }
                 // Length
                 if (value.Length != default)
                 {
-                    w.Write((ulong)1);
-                    w.Write((ulong)value.Length);
+                    w.Write((uint)1);
+                    w.Write(value.Length);
                 }
                 // LastAccessTime
                 if (value.LastAccessTime != default)
                 {
-                    w.Write((ulong)2);
+                    w.Write((uint)2);
                     w.Write(value.LastAccessTime);
                 }
             }
@@ -106,7 +106,7 @@ namespace Xeus.Core.Contents.Internal
                 if (rank > 256) throw new FormatException();
 
                 // Read property count
-                int propertyCount = (int)r.GetUInt64();
+                uint propertyCount = r.GetUInt32();
 
                 IList<ulong> p_sectors = default;
                 uint p_length = default;
@@ -114,22 +114,22 @@ namespace Xeus.Core.Contents.Internal
 
                 for (; propertyCount > 0; propertyCount--)
                 {
-                    int id = (int)r.GetUInt64();
+                    uint id = r.GetUInt32();
                     switch (id)
                     {
                         case 0: // Sectors
                             {
-                                var length = (int)r.GetUInt64();
+                                var length = r.GetUInt32();
                                 p_sectors = new ulong[length];
                                 for (int i = 0; i < p_sectors.Count; i++)
                                 {
-                                    p_sectors[i] = (ulong)r.GetUInt64();
+                                    p_sectors[i] = r.GetUInt64();
                                 }
                                 break;
                             }
                         case 1: // Length
                             {
-                                p_length = (uint)r.GetUInt64();
+                                p_length = r.GetUInt32();
                                 break;
                             }
                         case 2: // LastAccessTime
@@ -208,31 +208,31 @@ namespace Xeus.Core.Contents.Internal
 
                 // Write property count
                 {
-                    int propertyCount = 0;
+                    uint propertyCount = 0;
                     if (value.Clue != default) propertyCount++;
                     if (value.CreationTime != default) propertyCount++;
                     if (value.LockedHashes.Count != 0) propertyCount++;
                     if (value.SharedBlocksInfo != default) propertyCount++;
-                    w.Write((ulong)propertyCount);
+                    w.Write(propertyCount);
                 }
 
                 // Clue
                 if (value.Clue != default)
                 {
-                    w.Write((ulong)0);
+                    w.Write((uint)0);
                     Clue.Formatter.Serialize(w, value.Clue, rank + 1);
                 }
                 // CreationTime
                 if (value.CreationTime != default)
                 {
-                    w.Write((ulong)1);
+                    w.Write((uint)1);
                     w.Write(value.CreationTime);
                 }
                 // LockedHashes
                 if (value.LockedHashes.Count != 0)
                 {
-                    w.Write((ulong)2);
-                    w.Write((ulong)value.LockedHashes.Count);
+                    w.Write((uint)2);
+                    w.Write((uint)value.LockedHashes.Count);
                     foreach (var n in value.LockedHashes)
                     {
                         OmniHash.Formatter.Serialize(w, n, rank + 1);
@@ -241,7 +241,7 @@ namespace Xeus.Core.Contents.Internal
                 // SharedBlocksInfo
                 if (value.SharedBlocksInfo != default)
                 {
-                    w.Write((ulong)3);
+                    w.Write((uint)3);
                     SharedBlocksInfo.Formatter.Serialize(w, value.SharedBlocksInfo, rank + 1);
                 }
             }
@@ -251,7 +251,7 @@ namespace Xeus.Core.Contents.Internal
                 if (rank > 256) throw new FormatException();
 
                 // Read property count
-                int propertyCount = (int)r.GetUInt64();
+                uint propertyCount = r.GetUInt32();
 
                 Clue p_clue = default;
                 Timestamp p_creationTime = default;
@@ -260,7 +260,7 @@ namespace Xeus.Core.Contents.Internal
 
                 for (; propertyCount > 0; propertyCount--)
                 {
-                    int id = (int)r.GetUInt64();
+                    uint id = r.GetUInt32();
                     switch (id)
                     {
                         case 0: // Clue
@@ -275,7 +275,7 @@ namespace Xeus.Core.Contents.Internal
                             }
                         case 2: // LockedHashes
                             {
-                                var length = (int)r.GetUInt64();
+                                var length = r.GetUInt32();
                                 p_lockedHashes = new OmniHash[length];
                                 for (int i = 0; i < p_lockedHashes.Count; i++)
                                 {
@@ -360,37 +360,37 @@ namespace Xeus.Core.Contents.Internal
 
                 // Write property count
                 {
-                    int propertyCount = 0;
+                    uint propertyCount = 0;
                     if (value.Path != default) propertyCount++;
                     if (value.Length != default) propertyCount++;
                     if (value.BlockLength != default) propertyCount++;
                     if (value.Hashes.Count != 0) propertyCount++;
-                    w.Write((ulong)propertyCount);
+                    w.Write(propertyCount);
                 }
 
                 // Path
                 if (value.Path != default)
                 {
-                    w.Write((ulong)0);
+                    w.Write((uint)0);
                     w.Write(value.Path);
                 }
                 // Length
                 if (value.Length != default)
                 {
-                    w.Write((ulong)1);
-                    w.Write((ulong)value.Length);
+                    w.Write((uint)1);
+                    w.Write(value.Length);
                 }
                 // BlockLength
                 if (value.BlockLength != default)
                 {
-                    w.Write((ulong)2);
-                    w.Write((ulong)value.BlockLength);
+                    w.Write((uint)2);
+                    w.Write(value.BlockLength);
                 }
                 // Hashes
                 if (value.Hashes.Count != 0)
                 {
-                    w.Write((ulong)3);
-                    w.Write((ulong)value.Hashes.Count);
+                    w.Write((uint)3);
+                    w.Write((uint)value.Hashes.Count);
                     foreach (var n in value.Hashes)
                     {
                         OmniHash.Formatter.Serialize(w, n, rank + 1);
@@ -403,7 +403,7 @@ namespace Xeus.Core.Contents.Internal
                 if (rank > 256) throw new FormatException();
 
                 // Read property count
-                int propertyCount = (int)r.GetUInt64();
+                uint propertyCount = r.GetUInt32();
 
                 string p_path = default;
                 ulong p_length = default;
@@ -412,7 +412,7 @@ namespace Xeus.Core.Contents.Internal
 
                 for (; propertyCount > 0; propertyCount--)
                 {
-                    int id = (int)r.GetUInt64();
+                    uint id = r.GetUInt32();
                     switch (id)
                     {
                         case 0: // Path
@@ -422,17 +422,17 @@ namespace Xeus.Core.Contents.Internal
                             }
                         case 1: // Length
                             {
-                                p_length = (ulong)r.GetUInt64();
+                                p_length = r.GetUInt64();
                                 break;
                             }
                         case 2: // BlockLength
                             {
-                                p_blockLength = (uint)r.GetUInt64();
+                                p_blockLength = r.GetUInt32();
                                 break;
                             }
                         case 3: // Hashes
                             {
-                                var length = (int)r.GetUInt64();
+                                var length = r.GetUInt32();
                                 p_hashes = new OmniHash[length];
                                 for (int i = 0; i < p_hashes.Count; i++)
                                 {
@@ -509,24 +509,24 @@ namespace Xeus.Core.Contents.Internal
 
                 // Write property count
                 {
-                    int propertyCount = 0;
+                    uint propertyCount = 0;
                     if (value.Version != default) propertyCount++;
                     if (value.ClusterInfoMap.Count != 0) propertyCount++;
                     if (value.Size != default) propertyCount++;
-                    w.Write((ulong)propertyCount);
+                    w.Write(propertyCount);
                 }
 
                 // Version
                 if (value.Version != default)
                 {
-                    w.Write((ulong)0);
-                    w.Write((ulong)value.Version);
+                    w.Write((uint)0);
+                    w.Write(value.Version);
                 }
                 // ClusterInfoMap
                 if (value.ClusterInfoMap.Count != 0)
                 {
-                    w.Write((ulong)1);
-                    w.Write((ulong)value.ClusterInfoMap.Count);
+                    w.Write((uint)1);
+                    w.Write((uint)value.ClusterInfoMap.Count);
                     foreach (var n in value.ClusterInfoMap)
                     {
                         OmniHash.Formatter.Serialize(w, n.Key, rank + 1);
@@ -536,8 +536,8 @@ namespace Xeus.Core.Contents.Internal
                 // Size
                 if (value.Size != default)
                 {
-                    w.Write((ulong)2);
-                    w.Write((ulong)value.Size);
+                    w.Write((uint)2);
+                    w.Write(value.Size);
                 }
             }
 
@@ -546,7 +546,7 @@ namespace Xeus.Core.Contents.Internal
                 if (rank > 256) throw new FormatException();
 
                 // Read property count
-                int propertyCount = (int)r.GetUInt64();
+                uint propertyCount = r.GetUInt32();
 
                 uint p_version = default;
                 IDictionary<OmniHash, ClusterInfo> p_clusterInfoMap = default;
@@ -554,17 +554,17 @@ namespace Xeus.Core.Contents.Internal
 
                 for (; propertyCount > 0; propertyCount--)
                 {
-                    int id = (int)r.GetUInt64();
+                    uint id = r.GetUInt32();
                     switch (id)
                     {
                         case 0: // Version
                             {
-                                p_version = (uint)r.GetUInt64();
+                                p_version = r.GetUInt32();
                                 break;
                             }
                         case 1: // ClusterInfoMap
                             {
-                                var length = (int)r.GetUInt64();
+                                var length = r.GetUInt32();
                                 p_clusterInfoMap = new Dictionary<OmniHash, ClusterInfo>();
                                 OmniHash t_key = default;
                                 ClusterInfo t_value = default;
@@ -578,7 +578,7 @@ namespace Xeus.Core.Contents.Internal
                             }
                         case 2: // Size
                             {
-                                p_size = (ulong)r.GetUInt64();
+                                p_size = r.GetUInt64();
                                 break;
                             }
                     }
@@ -646,23 +646,23 @@ namespace Xeus.Core.Contents.Internal
 
                 // Write property count
                 {
-                    int propertyCount = 0;
+                    uint propertyCount = 0;
                     if (value.Version != default) propertyCount++;
                     if (value.ContentInfos.Count != 0) propertyCount++;
-                    w.Write((ulong)propertyCount);
+                    w.Write(propertyCount);
                 }
 
                 // Version
                 if (value.Version != default)
                 {
-                    w.Write((ulong)0);
-                    w.Write((ulong)value.Version);
+                    w.Write((uint)0);
+                    w.Write(value.Version);
                 }
                 // ContentInfos
                 if (value.ContentInfos.Count != 0)
                 {
-                    w.Write((ulong)1);
-                    w.Write((ulong)value.ContentInfos.Count);
+                    w.Write((uint)1);
+                    w.Write((uint)value.ContentInfos.Count);
                     foreach (var n in value.ContentInfos)
                     {
                         ContentInfo.Formatter.Serialize(w, n, rank + 1);
@@ -675,24 +675,24 @@ namespace Xeus.Core.Contents.Internal
                 if (rank > 256) throw new FormatException();
 
                 // Read property count
-                int propertyCount = (int)r.GetUInt64();
+                uint propertyCount = r.GetUInt32();
 
                 uint p_version = default;
                 IList<ContentInfo> p_contentInfos = default;
 
                 for (; propertyCount > 0; propertyCount--)
                 {
-                    int id = (int)r.GetUInt64();
+                    uint id = r.GetUInt32();
                     switch (id)
                     {
                         case 0: // Version
                             {
-                                p_version = (uint)r.GetUInt64();
+                                p_version = r.GetUInt32();
                                 break;
                             }
                         case 1: // ContentInfos
                             {
-                                var length = (int)r.GetUInt64();
+                                var length = r.GetUInt32();
                                 p_contentInfos = new ContentInfo[length];
                                 for (int i = 0; i < p_contentInfos.Count; i++)
                                 {

@@ -75,22 +75,22 @@ namespace Xeus.Messages.Reports
 
                 // Write property count
                 {
-                    int propertyCount = 0;
+                    uint propertyCount = 0;
                     if (value.Type != default) propertyCount++;
                     if (value.CreationTime != default) propertyCount++;
-                    w.Write((ulong)propertyCount);
+                    w.Write(propertyCount);
                 }
 
                 // Type
                 if (value.Type != default)
                 {
-                    w.Write((ulong)0);
+                    w.Write((uint)0);
                     w.Write((ulong)value.Type);
                 }
                 // CreationTime
                 if (value.CreationTime != default)
                 {
-                    w.Write((ulong)1);
+                    w.Write((uint)1);
                     w.Write(value.CreationTime);
                 }
             }
@@ -100,14 +100,14 @@ namespace Xeus.Messages.Reports
                 if (rank > 256) throw new FormatException();
 
                 // Read property count
-                int propertyCount = (int)r.GetUInt64();
+                uint propertyCount = r.GetUInt32();
 
                 ErrorReportType p_type = default;
                 Timestamp p_creationTime = default;
 
                 for (; propertyCount > 0; propertyCount--)
                 {
-                    int id = (int)r.GetUInt64();
+                    uint id = r.GetUInt32();
                     switch (id)
                     {
                         case 0: // Type
@@ -176,30 +176,30 @@ namespace Xeus.Messages.Reports
 
                 // Write property count
                 {
-                    int propertyCount = 0;
+                    uint propertyCount = 0;
                     if (value.BadBlockCount != default) propertyCount++;
                     if (value.CheckedBlockCount != default) propertyCount++;
                     if (value.TotalBlockCount != default) propertyCount++;
-                    w.Write((ulong)propertyCount);
+                    w.Write(propertyCount);
                 }
 
                 // BadBlockCount
                 if (value.BadBlockCount != default)
                 {
-                    w.Write((ulong)0);
-                    w.Write((ulong)value.BadBlockCount);
+                    w.Write((uint)0);
+                    w.Write(value.BadBlockCount);
                 }
                 // CheckedBlockCount
                 if (value.CheckedBlockCount != default)
                 {
-                    w.Write((ulong)1);
-                    w.Write((ulong)value.CheckedBlockCount);
+                    w.Write((uint)1);
+                    w.Write(value.CheckedBlockCount);
                 }
                 // TotalBlockCount
                 if (value.TotalBlockCount != default)
                 {
-                    w.Write((ulong)2);
-                    w.Write((ulong)value.TotalBlockCount);
+                    w.Write((uint)2);
+                    w.Write(value.TotalBlockCount);
                 }
             }
 
@@ -208,7 +208,7 @@ namespace Xeus.Messages.Reports
                 if (rank > 256) throw new FormatException();
 
                 // Read property count
-                int propertyCount = (int)r.GetUInt64();
+                uint propertyCount = r.GetUInt32();
 
                 uint p_badBlockCount = default;
                 uint p_checkedBlockCount = default;
@@ -216,22 +216,22 @@ namespace Xeus.Messages.Reports
 
                 for (; propertyCount > 0; propertyCount--)
                 {
-                    int id = (int)r.GetUInt64();
+                    uint id = r.GetUInt32();
                     switch (id)
                     {
                         case 0: // BadBlockCount
                             {
-                                p_badBlockCount = (uint)r.GetUInt64();
+                                p_badBlockCount = r.GetUInt32();
                                 break;
                             }
                         case 1: // CheckedBlockCount
                             {
-                                p_checkedBlockCount = (uint)r.GetUInt64();
+                                p_checkedBlockCount = r.GetUInt32();
                                 break;
                             }
                         case 2: // TotalBlockCount
                             {
-                                p_totalBlockCount = (uint)r.GetUInt64();
+                                p_totalBlockCount = r.GetUInt32();
                                 break;
                             }
                     }
@@ -300,36 +300,36 @@ namespace Xeus.Messages.Reports
 
                 // Write property count
                 {
-                    int propertyCount = 0;
+                    uint propertyCount = 0;
                     if (value.Clue != default) propertyCount++;
                     if (value.Length != default) propertyCount++;
                     if (value.CreationTime != default) propertyCount++;
                     if (value.Path != default) propertyCount++;
-                    w.Write((ulong)propertyCount);
+                    w.Write(propertyCount);
                 }
 
                 // Clue
                 if (value.Clue != default)
                 {
-                    w.Write((ulong)0);
+                    w.Write((uint)0);
                     Clue.Formatter.Serialize(w, value.Clue, rank + 1);
                 }
                 // Length
                 if (value.Length != default)
                 {
-                    w.Write((ulong)1);
-                    w.Write((ulong)value.Length);
+                    w.Write((uint)1);
+                    w.Write(value.Length);
                 }
                 // CreationTime
                 if (value.CreationTime != default)
                 {
-                    w.Write((ulong)2);
+                    w.Write((uint)2);
                     w.Write(value.CreationTime);
                 }
                 // Path
                 if (value.Path != default)
                 {
-                    w.Write((ulong)3);
+                    w.Write((uint)3);
                     w.Write(value.Path);
                 }
             }
@@ -339,7 +339,7 @@ namespace Xeus.Messages.Reports
                 if (rank > 256) throw new FormatException();
 
                 // Read property count
-                int propertyCount = (int)r.GetUInt64();
+                uint propertyCount = r.GetUInt32();
 
                 Clue p_clue = default;
                 ulong p_length = default;
@@ -348,7 +348,7 @@ namespace Xeus.Messages.Reports
 
                 for (; propertyCount > 0; propertyCount--)
                 {
-                    int id = (int)r.GetUInt64();
+                    uint id = r.GetUInt32();
                     switch (id)
                     {
                         case 0: // Clue
@@ -358,7 +358,7 @@ namespace Xeus.Messages.Reports
                             }
                         case 1: // Length
                             {
-                                p_length = (ulong)r.GetUInt64();
+                                p_length = r.GetUInt64();
                                 break;
                             }
                         case 2: // CreationTime
@@ -427,30 +427,30 @@ namespace Xeus.Messages.Reports
 
                 // Write property count
                 {
-                    int propertyCount = 0;
+                    uint propertyCount = 0;
                     if (value.BlockCount != default) propertyCount++;
                     if (value.UsingAreaSize != default) propertyCount++;
                     if (value.ProtectionAreaSize != default) propertyCount++;
-                    w.Write((ulong)propertyCount);
+                    w.Write(propertyCount);
                 }
 
                 // BlockCount
                 if (value.BlockCount != default)
                 {
-                    w.Write((ulong)0);
-                    w.Write((ulong)value.BlockCount);
+                    w.Write((uint)0);
+                    w.Write(value.BlockCount);
                 }
                 // UsingAreaSize
                 if (value.UsingAreaSize != default)
                 {
-                    w.Write((ulong)1);
-                    w.Write((ulong)value.UsingAreaSize);
+                    w.Write((uint)1);
+                    w.Write(value.UsingAreaSize);
                 }
                 // ProtectionAreaSize
                 if (value.ProtectionAreaSize != default)
                 {
-                    w.Write((ulong)2);
-                    w.Write((ulong)value.ProtectionAreaSize);
+                    w.Write((uint)2);
+                    w.Write(value.ProtectionAreaSize);
                 }
             }
 
@@ -459,7 +459,7 @@ namespace Xeus.Messages.Reports
                 if (rank > 256) throw new FormatException();
 
                 // Read property count
-                int propertyCount = (int)r.GetUInt64();
+                uint propertyCount = r.GetUInt32();
 
                 uint p_blockCount = default;
                 ulong p_usingAreaSize = default;
@@ -467,22 +467,22 @@ namespace Xeus.Messages.Reports
 
                 for (; propertyCount > 0; propertyCount--)
                 {
-                    int id = (int)r.GetUInt64();
+                    uint id = r.GetUInt32();
                     switch (id)
                     {
                         case 0: // BlockCount
                             {
-                                p_blockCount = (uint)r.GetUInt64();
+                                p_blockCount = r.GetUInt32();
                                 break;
                             }
                         case 1: // UsingAreaSize
                             {
-                                p_usingAreaSize = (ulong)r.GetUInt64();
+                                p_usingAreaSize = r.GetUInt64();
                                 break;
                             }
                         case 2: // ProtectionAreaSize
                             {
-                                p_protectionAreaSize = (ulong)r.GetUInt64();
+                                p_protectionAreaSize = r.GetUInt64();
                                 break;
                             }
                     }
@@ -562,7 +562,7 @@ namespace Xeus.Messages.Reports
 
                 // Write property count
                 {
-                    int propertyCount = 0;
+                    uint propertyCount = 0;
                     if (value.Clue != default) propertyCount++;
                     if (value.Path != default) propertyCount++;
                     if (value.DownloadStateType != default) propertyCount++;
@@ -570,50 +570,50 @@ namespace Xeus.Messages.Reports
                     if (value.TotalBlockCount != default) propertyCount++;
                     if (value.DownloadedBlockCount != default) propertyCount++;
                     if (value.ParityBlockCount != default) propertyCount++;
-                    w.Write((ulong)propertyCount);
+                    w.Write(propertyCount);
                 }
 
                 // Clue
                 if (value.Clue != default)
                 {
-                    w.Write((ulong)0);
+                    w.Write((uint)0);
                     Clue.Formatter.Serialize(w, value.Clue, rank + 1);
                 }
                 // Path
                 if (value.Path != default)
                 {
-                    w.Write((ulong)1);
+                    w.Write((uint)1);
                     w.Write(value.Path);
                 }
                 // DownloadStateType
                 if (value.DownloadStateType != default)
                 {
-                    w.Write((ulong)2);
+                    w.Write((uint)2);
                     w.Write((ulong)value.DownloadStateType);
                 }
                 // DownloadingDepth
                 if (value.DownloadingDepth != default)
                 {
-                    w.Write((ulong)3);
-                    w.Write((ulong)value.DownloadingDepth);
+                    w.Write((uint)3);
+                    w.Write(value.DownloadingDepth);
                 }
                 // TotalBlockCount
                 if (value.TotalBlockCount != default)
                 {
-                    w.Write((ulong)4);
-                    w.Write((ulong)value.TotalBlockCount);
+                    w.Write((uint)4);
+                    w.Write(value.TotalBlockCount);
                 }
                 // DownloadedBlockCount
                 if (value.DownloadedBlockCount != default)
                 {
-                    w.Write((ulong)5);
-                    w.Write((ulong)value.DownloadedBlockCount);
+                    w.Write((uint)5);
+                    w.Write(value.DownloadedBlockCount);
                 }
                 // ParityBlockCount
                 if (value.ParityBlockCount != default)
                 {
-                    w.Write((ulong)6);
-                    w.Write((ulong)value.ParityBlockCount);
+                    w.Write((uint)6);
+                    w.Write(value.ParityBlockCount);
                 }
             }
 
@@ -622,7 +622,7 @@ namespace Xeus.Messages.Reports
                 if (rank > 256) throw new FormatException();
 
                 // Read property count
-                int propertyCount = (int)r.GetUInt64();
+                uint propertyCount = r.GetUInt32();
 
                 Clue p_clue = default;
                 string p_path = default;
@@ -634,7 +634,7 @@ namespace Xeus.Messages.Reports
 
                 for (; propertyCount > 0; propertyCount--)
                 {
-                    int id = (int)r.GetUInt64();
+                    uint id = r.GetUInt32();
                     switch (id)
                     {
                         case 0: // Clue
@@ -654,22 +654,22 @@ namespace Xeus.Messages.Reports
                             }
                         case 3: // DownloadingDepth
                             {
-                                p_downloadingDepth = (byte)r.GetUInt64();
+                                p_downloadingDepth = r.GetUInt8();
                                 break;
                             }
                         case 4: // TotalBlockCount
                             {
-                                p_totalBlockCount = (ulong)r.GetUInt64();
+                                p_totalBlockCount = r.GetUInt64();
                                 break;
                             }
                         case 5: // DownloadedBlockCount
                             {
-                                p_downloadedBlockCount = (ulong)r.GetUInt64();
+                                p_downloadedBlockCount = r.GetUInt64();
                                 break;
                             }
                         case 6: // ParityBlockCount
                             {
-                                p_parityBlockCount = (ulong)r.GetUInt64();
+                                p_parityBlockCount = r.GetUInt64();
                                 break;
                             }
                     }
@@ -716,8 +716,8 @@ namespace Xeus.Messages.Reports
 
                 // Write property count
                 {
-                    int propertyCount = 0;
-                    w.Write((ulong)propertyCount);
+                    uint propertyCount = 0;
+                    w.Write(propertyCount);
                 }
 
             }
@@ -727,12 +727,12 @@ namespace Xeus.Messages.Reports
                 if (rank > 256) throw new FormatException();
 
                 // Read property count
-                int propertyCount = (int)r.GetUInt64();
+                uint propertyCount = r.GetUInt32();
 
 
                 for (; propertyCount > 0; propertyCount--)
                 {
-                    int id = (int)r.GetUInt64();
+                    uint id = r.GetUInt32();
                     switch (id)
                     {
                     }
@@ -779,8 +779,8 @@ namespace Xeus.Messages.Reports
 
                 // Write property count
                 {
-                    int propertyCount = 0;
-                    w.Write((ulong)propertyCount);
+                    uint propertyCount = 0;
+                    w.Write(propertyCount);
                 }
 
             }
@@ -790,12 +790,12 @@ namespace Xeus.Messages.Reports
                 if (rank > 256) throw new FormatException();
 
                 // Read property count
-                int propertyCount = (int)r.GetUInt64();
+                uint propertyCount = r.GetUInt32();
 
 
                 for (; propertyCount > 0; propertyCount--)
                 {
-                    int id = (int)r.GetUInt64();
+                    uint id = r.GetUInt32();
                     switch (id)
                     {
                     }
@@ -842,8 +842,8 @@ namespace Xeus.Messages.Reports
 
                 // Write property count
                 {
-                    int propertyCount = 0;
-                    w.Write((ulong)propertyCount);
+                    uint propertyCount = 0;
+                    w.Write(propertyCount);
                 }
 
             }
@@ -853,12 +853,12 @@ namespace Xeus.Messages.Reports
                 if (rank > 256) throw new FormatException();
 
                 // Read property count
-                int propertyCount = (int)r.GetUInt64();
+                uint propertyCount = r.GetUInt32();
 
 
                 for (; propertyCount > 0; propertyCount--)
                 {
-                    int id = (int)r.GetUInt64();
+                    uint id = r.GetUInt32();
                     switch (id)
                     {
                     }

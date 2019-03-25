@@ -54,23 +54,23 @@ namespace Xeus.Messages
 
                 // Write property count
                 {
-                    int propertyCount = 0;
+                    uint propertyCount = 0;
                     if (value.Hash != default) propertyCount++;
                     if (value.Depth != default) propertyCount++;
-                    w.Write((ulong)propertyCount);
+                    w.Write(propertyCount);
                 }
 
                 // Hash
                 if (value.Hash != default)
                 {
-                    w.Write((ulong)0);
+                    w.Write((uint)0);
                     OmniHash.Formatter.Serialize(w, value.Hash, rank + 1);
                 }
                 // Depth
                 if (value.Depth != default)
                 {
-                    w.Write((ulong)1);
-                    w.Write((ulong)value.Depth);
+                    w.Write((uint)1);
+                    w.Write(value.Depth);
                 }
             }
 
@@ -79,14 +79,14 @@ namespace Xeus.Messages
                 if (rank > 256) throw new FormatException();
 
                 // Read property count
-                int propertyCount = (int)r.GetUInt64();
+                uint propertyCount = r.GetUInt32();
 
                 OmniHash p_hash = default;
                 byte p_depth = default;
 
                 for (; propertyCount > 0; propertyCount--)
                 {
-                    int id = (int)r.GetUInt64();
+                    uint id = r.GetUInt32();
                     switch (id)
                     {
                         case 0: // Hash
@@ -96,7 +96,7 @@ namespace Xeus.Messages
                             }
                         case 1: // Depth
                             {
-                                p_depth = (byte)r.GetUInt64();
+                                p_depth = r.GetUInt8();
                                 break;
                             }
                     }
@@ -181,44 +181,44 @@ namespace Xeus.Messages
 
                 // Write property count
                 {
-                    int propertyCount = 0;
+                    uint propertyCount = 0;
                     if (value.Clue != default) propertyCount++;
                     if (value.Name != default) propertyCount++;
                     if (value.Length != default) propertyCount++;
                     if (value.CreationTime != default) propertyCount++;
                     if (value.Tags.Count != 0) propertyCount++;
-                    w.Write((ulong)propertyCount);
+                    w.Write(propertyCount);
                 }
 
                 // Clue
                 if (value.Clue != default)
                 {
-                    w.Write((ulong)0);
+                    w.Write((uint)0);
                     Clue.Formatter.Serialize(w, value.Clue, rank + 1);
                 }
                 // Name
                 if (value.Name != default)
                 {
-                    w.Write((ulong)1);
+                    w.Write((uint)1);
                     w.Write(value.Name);
                 }
                 // Length
                 if (value.Length != default)
                 {
-                    w.Write((ulong)2);
-                    w.Write((ulong)value.Length);
+                    w.Write((uint)2);
+                    w.Write(value.Length);
                 }
                 // CreationTime
                 if (value.CreationTime != default)
                 {
-                    w.Write((ulong)3);
+                    w.Write((uint)3);
                     w.Write(value.CreationTime);
                 }
                 // Tags
                 if (value.Tags.Count != 0)
                 {
-                    w.Write((ulong)4);
-                    w.Write((ulong)value.Tags.Count);
+                    w.Write((uint)4);
+                    w.Write((uint)value.Tags.Count);
                     foreach (var n in value.Tags)
                     {
                         w.Write(n);
@@ -231,7 +231,7 @@ namespace Xeus.Messages
                 if (rank > 256) throw new FormatException();
 
                 // Read property count
-                int propertyCount = (int)r.GetUInt64();
+                uint propertyCount = r.GetUInt32();
 
                 Clue p_clue = default;
                 string p_name = default;
@@ -241,7 +241,7 @@ namespace Xeus.Messages
 
                 for (; propertyCount > 0; propertyCount--)
                 {
-                    int id = (int)r.GetUInt64();
+                    uint id = r.GetUInt32();
                     switch (id)
                     {
                         case 0: // Clue
@@ -256,7 +256,7 @@ namespace Xeus.Messages
                             }
                         case 2: // Length
                             {
-                                p_length = (ulong)r.GetUInt64();
+                                p_length = r.GetUInt64();
                                 break;
                             }
                         case 3: // CreationTime
@@ -266,7 +266,7 @@ namespace Xeus.Messages
                             }
                         case 4: // Tags
                             {
-                                var length = (int)r.GetUInt64();
+                                var length = r.GetUInt32();
                                 p_tags = new string[length];
                                 for (int i = 0; i < p_tags.Count; i++)
                                 {
@@ -355,24 +355,24 @@ namespace Xeus.Messages
 
                 // Write property count
                 {
-                    int propertyCount = 0;
+                    uint propertyCount = 0;
                     if (value.AgreementPublicKey != default) propertyCount++;
                     if (value.TrustedSignatures.Count != 0) propertyCount++;
                     if (value.InvalidSignatures.Count != 0) propertyCount++;
-                    w.Write((ulong)propertyCount);
+                    w.Write(propertyCount);
                 }
 
                 // AgreementPublicKey
                 if (value.AgreementPublicKey != default)
                 {
-                    w.Write((ulong)0);
+                    w.Write((uint)0);
                     OmniAgreementPublicKey.Formatter.Serialize(w, value.AgreementPublicKey, rank + 1);
                 }
                 // TrustedSignatures
                 if (value.TrustedSignatures.Count != 0)
                 {
-                    w.Write((ulong)1);
-                    w.Write((ulong)value.TrustedSignatures.Count);
+                    w.Write((uint)1);
+                    w.Write((uint)value.TrustedSignatures.Count);
                     foreach (var n in value.TrustedSignatures)
                     {
                         OmniSignature.Formatter.Serialize(w, n, rank + 1);
@@ -381,8 +381,8 @@ namespace Xeus.Messages
                 // InvalidSignatures
                 if (value.InvalidSignatures.Count != 0)
                 {
-                    w.Write((ulong)2);
-                    w.Write((ulong)value.InvalidSignatures.Count);
+                    w.Write((uint)2);
+                    w.Write((uint)value.InvalidSignatures.Count);
                     foreach (var n in value.InvalidSignatures)
                     {
                         OmniSignature.Formatter.Serialize(w, n, rank + 1);
@@ -395,7 +395,7 @@ namespace Xeus.Messages
                 if (rank > 256) throw new FormatException();
 
                 // Read property count
-                int propertyCount = (int)r.GetUInt64();
+                uint propertyCount = r.GetUInt32();
 
                 OmniAgreementPublicKey p_agreementPublicKey = default;
                 IList<OmniSignature> p_trustedSignatures = default;
@@ -403,7 +403,7 @@ namespace Xeus.Messages
 
                 for (; propertyCount > 0; propertyCount--)
                 {
-                    int id = (int)r.GetUInt64();
+                    uint id = r.GetUInt32();
                     switch (id)
                     {
                         case 0: // AgreementPublicKey
@@ -413,7 +413,7 @@ namespace Xeus.Messages
                             }
                         case 1: // TrustedSignatures
                             {
-                                var length = (int)r.GetUInt64();
+                                var length = r.GetUInt32();
                                 p_trustedSignatures = new OmniSignature[length];
                                 for (int i = 0; i < p_trustedSignatures.Count; i++)
                                 {
@@ -423,7 +423,7 @@ namespace Xeus.Messages
                             }
                         case 2: // InvalidSignatures
                             {
-                                var length = (int)r.GetUInt64();
+                                var length = r.GetUInt32();
                                 p_invalidSignatures = new OmniSignature[length];
                                 for (int i = 0; i < p_invalidSignatures.Count; i++)
                                 {
@@ -492,16 +492,16 @@ namespace Xeus.Messages
 
                 // Write property count
                 {
-                    int propertyCount = 0;
+                    uint propertyCount = 0;
                     if (value.ArchiveMetadatas.Count != 0) propertyCount++;
-                    w.Write((ulong)propertyCount);
+                    w.Write(propertyCount);
                 }
 
                 // ArchiveMetadatas
                 if (value.ArchiveMetadatas.Count != 0)
                 {
-                    w.Write((ulong)0);
-                    w.Write((ulong)value.ArchiveMetadatas.Count);
+                    w.Write((uint)0);
+                    w.Write((uint)value.ArchiveMetadatas.Count);
                     foreach (var n in value.ArchiveMetadatas)
                     {
                         ArchiveMetadata.Formatter.Serialize(w, n, rank + 1);
@@ -514,18 +514,18 @@ namespace Xeus.Messages
                 if (rank > 256) throw new FormatException();
 
                 // Read property count
-                int propertyCount = (int)r.GetUInt64();
+                uint propertyCount = r.GetUInt32();
 
                 IList<ArchiveMetadata> p_archiveMetadatas = default;
 
                 for (; propertyCount > 0; propertyCount--)
                 {
-                    int id = (int)r.GetUInt64();
+                    uint id = r.GetUInt32();
                     switch (id)
                     {
                         case 0: // ArchiveMetadatas
                             {
-                                var length = (int)r.GetUInt64();
+                                var length = r.GetUInt32();
                                 p_archiveMetadatas = new ArchiveMetadata[length];
                                 for (int i = 0; i < p_archiveMetadatas.Count; i++)
                                 {
@@ -586,15 +586,15 @@ namespace Xeus.Messages
 
                 // Write property count
                 {
-                    int propertyCount = 0;
+                    uint propertyCount = 0;
                     if (value.Comment != default) propertyCount++;
-                    w.Write((ulong)propertyCount);
+                    w.Write(propertyCount);
                 }
 
                 // Comment
                 if (value.Comment != default)
                 {
-                    w.Write((ulong)0);
+                    w.Write((uint)0);
                     w.Write(value.Comment);
                 }
             }
@@ -604,13 +604,13 @@ namespace Xeus.Messages
                 if (rank > 256) throw new FormatException();
 
                 // Read property count
-                int propertyCount = (int)r.GetUInt64();
+                uint propertyCount = r.GetUInt32();
 
                 string p_comment = default;
 
                 for (; propertyCount > 0; propertyCount--)
                 {
-                    int id = (int)r.GetUInt64();
+                    uint id = r.GetUInt32();
                     switch (id)
                     {
                         case 0: // Comment
@@ -677,29 +677,29 @@ namespace Xeus.Messages
 
                 // Write property count
                 {
-                    int propertyCount = 0;
+                    uint propertyCount = 0;
                     if (value.AuthorSignature != default) propertyCount++;
                     if (value.CreationTime != default) propertyCount++;
                     if (value.Value != default) propertyCount++;
-                    w.Write((ulong)propertyCount);
+                    w.Write(propertyCount);
                 }
 
                 // AuthorSignature
                 if (value.AuthorSignature != default)
                 {
-                    w.Write((ulong)0);
+                    w.Write((uint)0);
                     OmniSignature.Formatter.Serialize(w, value.AuthorSignature, rank + 1);
                 }
                 // CreationTime
                 if (value.CreationTime != default)
                 {
-                    w.Write((ulong)1);
+                    w.Write((uint)1);
                     w.Write(value.CreationTime);
                 }
                 // Value
                 if (value.Value != default)
                 {
-                    w.Write((ulong)2);
+                    w.Write((uint)2);
                     ProfileContent.Formatter.Serialize(w, value.Value, rank + 1);
                 }
             }
@@ -709,7 +709,7 @@ namespace Xeus.Messages
                 if (rank > 256) throw new FormatException();
 
                 // Read property count
-                int propertyCount = (int)r.GetUInt64();
+                uint propertyCount = r.GetUInt32();
 
                 OmniSignature p_authorSignature = default;
                 Timestamp p_creationTime = default;
@@ -717,7 +717,7 @@ namespace Xeus.Messages
 
                 for (; propertyCount > 0; propertyCount--)
                 {
-                    int id = (int)r.GetUInt64();
+                    uint id = r.GetUInt32();
                     switch (id)
                     {
                         case 0: // AuthorSignature
@@ -794,29 +794,29 @@ namespace Xeus.Messages
 
                 // Write property count
                 {
-                    int propertyCount = 0;
+                    uint propertyCount = 0;
                     if (value.AuthorSignature != default) propertyCount++;
                     if (value.CreationTime != default) propertyCount++;
                     if (value.Value != default) propertyCount++;
-                    w.Write((ulong)propertyCount);
+                    w.Write(propertyCount);
                 }
 
                 // AuthorSignature
                 if (value.AuthorSignature != default)
                 {
-                    w.Write((ulong)0);
+                    w.Write((uint)0);
                     OmniSignature.Formatter.Serialize(w, value.AuthorSignature, rank + 1);
                 }
                 // CreationTime
                 if (value.CreationTime != default)
                 {
-                    w.Write((ulong)1);
+                    w.Write((uint)1);
                     w.Write(value.CreationTime);
                 }
                 // Value
                 if (value.Value != default)
                 {
-                    w.Write((ulong)2);
+                    w.Write((uint)2);
                     StoreContent.Formatter.Serialize(w, value.Value, rank + 1);
                 }
             }
@@ -826,7 +826,7 @@ namespace Xeus.Messages
                 if (rank > 256) throw new FormatException();
 
                 // Read property count
-                int propertyCount = (int)r.GetUInt64();
+                uint propertyCount = r.GetUInt32();
 
                 OmniSignature p_authorSignature = default;
                 Timestamp p_creationTime = default;
@@ -834,7 +834,7 @@ namespace Xeus.Messages
 
                 for (; propertyCount > 0; propertyCount--)
                 {
-                    int id = (int)r.GetUInt64();
+                    uint id = r.GetUInt32();
                     switch (id)
                     {
                         case 0: // AuthorSignature
@@ -911,22 +911,22 @@ namespace Xeus.Messages
 
                 // Write property count
                 {
-                    int propertyCount = 0;
+                    uint propertyCount = 0;
                     if (!value.Id.IsEmpty) propertyCount++;
                     if (value.Name != default) propertyCount++;
-                    w.Write((ulong)propertyCount);
+                    w.Write(propertyCount);
                 }
 
                 // Id
                 if (!value.Id.IsEmpty)
                 {
-                    w.Write((ulong)0);
+                    w.Write((uint)0);
                     w.Write(value.Id.Span);
                 }
                 // Name
                 if (value.Name != default)
                 {
-                    w.Write((ulong)1);
+                    w.Write((uint)1);
                     w.Write(value.Name);
                 }
             }
@@ -936,14 +936,14 @@ namespace Xeus.Messages
                 if (rank > 256) throw new FormatException();
 
                 // Read property count
-                int propertyCount = (int)r.GetUInt64();
+                uint propertyCount = r.GetUInt32();
 
                 ReadOnlyMemory<byte> p_id = default;
                 string p_name = default;
 
                 for (; propertyCount > 0; propertyCount--)
                 {
-                    int id = (int)r.GetUInt64();
+                    uint id = r.GetUInt32();
                     switch (id)
                     {
                         case 0: // Id
@@ -1024,43 +1024,43 @@ namespace Xeus.Messages
 
                 // Write property count
                 {
-                    int propertyCount = 0;
+                    uint propertyCount = 0;
                     if (value.Channel != default) propertyCount++;
                     if (value.AuthorSignature != default) propertyCount++;
                     if (value.CreationTime != default) propertyCount++;
                     if (value.Cost != default) propertyCount++;
                     if (value.Value != default) propertyCount++;
-                    w.Write((ulong)propertyCount);
+                    w.Write(propertyCount);
                 }
 
                 // Channel
                 if (value.Channel != default)
                 {
-                    w.Write((ulong)0);
+                    w.Write((uint)0);
                     Channel.Formatter.Serialize(w, value.Channel, rank + 1);
                 }
                 // AuthorSignature
                 if (value.AuthorSignature != default)
                 {
-                    w.Write((ulong)1);
+                    w.Write((uint)1);
                     OmniSignature.Formatter.Serialize(w, value.AuthorSignature, rank + 1);
                 }
                 // CreationTime
                 if (value.CreationTime != default)
                 {
-                    w.Write((ulong)2);
+                    w.Write((uint)2);
                     w.Write(value.CreationTime);
                 }
                 // Cost
                 if (value.Cost != default)
                 {
-                    w.Write((ulong)3);
-                    w.Write((ulong)value.Cost);
+                    w.Write((uint)3);
+                    w.Write(value.Cost);
                 }
                 // Value
                 if (value.Value != default)
                 {
-                    w.Write((ulong)4);
+                    w.Write((uint)4);
                     CommentContent.Formatter.Serialize(w, value.Value, rank + 1);
                 }
             }
@@ -1070,7 +1070,7 @@ namespace Xeus.Messages
                 if (rank > 256) throw new FormatException();
 
                 // Read property count
-                int propertyCount = (int)r.GetUInt64();
+                uint propertyCount = r.GetUInt32();
 
                 Channel p_channel = default;
                 OmniSignature p_authorSignature = default;
@@ -1080,7 +1080,7 @@ namespace Xeus.Messages
 
                 for (; propertyCount > 0; propertyCount--)
                 {
-                    int id = (int)r.GetUInt64();
+                    uint id = r.GetUInt32();
                     switch (id)
                     {
                         case 0: // Channel
@@ -1100,7 +1100,7 @@ namespace Xeus.Messages
                             }
                         case 3: // Cost
                             {
-                                p_cost = (uint)r.GetUInt64();
+                                p_cost = r.GetUInt32();
                                 break;
                             }
                         case 4: // Value
@@ -1172,36 +1172,36 @@ namespace Xeus.Messages
 
                 // Write property count
                 {
-                    int propertyCount = 0;
+                    uint propertyCount = 0;
                     if (value.TargetSignature != default) propertyCount++;
                     if (value.AuthorSignature != default) propertyCount++;
                     if (value.CreationTime != default) propertyCount++;
                     if (value.Value != default) propertyCount++;
-                    w.Write((ulong)propertyCount);
+                    w.Write(propertyCount);
                 }
 
                 // TargetSignature
                 if (value.TargetSignature != default)
                 {
-                    w.Write((ulong)0);
+                    w.Write((uint)0);
                     OmniSignature.Formatter.Serialize(w, value.TargetSignature, rank + 1);
                 }
                 // AuthorSignature
                 if (value.AuthorSignature != default)
                 {
-                    w.Write((ulong)1);
+                    w.Write((uint)1);
                     OmniSignature.Formatter.Serialize(w, value.AuthorSignature, rank + 1);
                 }
                 // CreationTime
                 if (value.CreationTime != default)
                 {
-                    w.Write((ulong)2);
+                    w.Write((uint)2);
                     w.Write(value.CreationTime);
                 }
                 // Value
                 if (value.Value != default)
                 {
-                    w.Write((ulong)3);
+                    w.Write((uint)3);
                     CommentContent.Formatter.Serialize(w, value.Value, rank + 1);
                 }
             }
@@ -1211,7 +1211,7 @@ namespace Xeus.Messages
                 if (rank > 256) throw new FormatException();
 
                 // Read property count
-                int propertyCount = (int)r.GetUInt64();
+                uint propertyCount = r.GetUInt32();
 
                 OmniSignature p_targetSignature = default;
                 OmniSignature p_authorSignature = default;
@@ -1220,7 +1220,7 @@ namespace Xeus.Messages
 
                 for (; propertyCount > 0; propertyCount--)
                 {
-                    int id = (int)r.GetUInt64();
+                    uint id = r.GetUInt32();
                     switch (id)
                     {
                         case 0: // TargetSignature

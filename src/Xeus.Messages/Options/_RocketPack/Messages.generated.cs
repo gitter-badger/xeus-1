@@ -75,29 +75,29 @@ namespace Xeus.Messages.Options
 
                 // Write property count
                 {
-                    int propertyCount = 0;
+                    uint propertyCount = 0;
                     if (value.Scheme != default) propertyCount++;
                     if (value.ConnectionType != default) propertyCount++;
                     if (value.ProxyUri != default) propertyCount++;
-                    w.Write((ulong)propertyCount);
+                    w.Write(propertyCount);
                 }
 
                 // Scheme
                 if (value.Scheme != default)
                 {
-                    w.Write((ulong)0);
+                    w.Write((uint)0);
                     w.Write(value.Scheme);
                 }
                 // ConnectionType
                 if (value.ConnectionType != default)
                 {
-                    w.Write((ulong)1);
+                    w.Write((uint)1);
                     w.Write((ulong)value.ConnectionType);
                 }
                 // ProxyUri
                 if (value.ProxyUri != default)
                 {
-                    w.Write((ulong)2);
+                    w.Write((uint)2);
                     w.Write(value.ProxyUri);
                 }
             }
@@ -107,7 +107,7 @@ namespace Xeus.Messages.Options
                 if (rank > 256) throw new FormatException();
 
                 // Read property count
-                int propertyCount = (int)r.GetUInt64();
+                uint propertyCount = r.GetUInt32();
 
                 string p_scheme = default;
                 ConnectionType p_connectionType = default;
@@ -115,7 +115,7 @@ namespace Xeus.Messages.Options
 
                 for (; propertyCount > 0; propertyCount--)
                 {
-                    int id = (int)r.GetUInt64();
+                    uint id = r.GetUInt32();
                     switch (id)
                     {
                         case 0: // Scheme
@@ -177,8 +177,8 @@ namespace Xeus.Messages.Options
 
                 // Write property count
                 {
-                    int propertyCount = 0;
-                    w.Write((ulong)propertyCount);
+                    uint propertyCount = 0;
+                    w.Write(propertyCount);
                 }
 
             }
@@ -188,12 +188,12 @@ namespace Xeus.Messages.Options
                 if (rank > 256) throw new FormatException();
 
                 // Read property count
-                int propertyCount = (int)r.GetUInt64();
+                uint propertyCount = r.GetUInt32();
 
 
                 for (; propertyCount > 0; propertyCount--)
                 {
-                    int id = (int)r.GetUInt64();
+                    uint id = r.GetUInt32();
                     switch (id)
                     {
                     }
@@ -249,15 +249,15 @@ namespace Xeus.Messages.Options
 
                 // Write property count
                 {
-                    int propertyCount = 0;
+                    uint propertyCount = 0;
                     if (value.BasePath != default) propertyCount++;
-                    w.Write((ulong)propertyCount);
+                    w.Write(propertyCount);
                 }
 
                 // BasePath
                 if (value.BasePath != default)
                 {
-                    w.Write((ulong)0);
+                    w.Write((uint)0);
                     w.Write(value.BasePath);
                 }
             }
@@ -267,13 +267,13 @@ namespace Xeus.Messages.Options
                 if (rank > 256) throw new FormatException();
 
                 // Read property count
-                int propertyCount = (int)r.GetUInt64();
+                uint propertyCount = r.GetUInt32();
 
                 string p_basePath = default;
 
                 for (; propertyCount > 0; propertyCount--)
                 {
-                    int id = (int)r.GetUInt64();
+                    uint id = r.GetUInt32();
                     switch (id)
                     {
                         case 0: // BasePath

@@ -29,7 +29,7 @@ namespace Xeus.Core.Exchange.Internal.Helpers
             return _myInitHopLimit;
         }
 
-        public static int Decrement(int current, bool decrementAtMaximum, bool decrementAtMinimum)
+        public static int Decrement(int current, bool decrementAtHopLimitMaximum, bool decrementAtHopLimitMinimum)
         {
             if (current > MaxHopLimit)
             {
@@ -43,7 +43,7 @@ namespace Xeus.Core.Exchange.Internal.Helpers
 
             if (current == MaxHopLimit)
             {
-                if (decrementAtMaximum)
+                if (decrementAtHopLimitMaximum)
                 {
                     return current - 1;
                 }
@@ -53,7 +53,7 @@ namespace Xeus.Core.Exchange.Internal.Helpers
 
             if (current == 1)
             {
-                if (decrementAtMinimum)
+                if (decrementAtHopLimitMinimum)
                 {
                     return current - 1;
                 }

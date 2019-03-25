@@ -76,30 +76,30 @@ namespace Xeus.Core.Internal
 
                 // Write property count
                 {
-                    int propertyCount = 0;
+                    uint propertyCount = 0;
                     if (value.CorrectionAlgorithmType != default) propertyCount++;
                     if (value.Length != default) propertyCount++;
                     if (value.Hashes.Count != 0) propertyCount++;
-                    w.Write((ulong)propertyCount);
+                    w.Write(propertyCount);
                 }
 
                 // CorrectionAlgorithmType
                 if (value.CorrectionAlgorithmType != default)
                 {
-                    w.Write((ulong)0);
+                    w.Write((uint)0);
                     w.Write((ulong)value.CorrectionAlgorithmType);
                 }
                 // Length
                 if (value.Length != default)
                 {
-                    w.Write((ulong)1);
-                    w.Write((ulong)value.Length);
+                    w.Write((uint)1);
+                    w.Write(value.Length);
                 }
                 // Hashes
                 if (value.Hashes.Count != 0)
                 {
-                    w.Write((ulong)2);
-                    w.Write((ulong)value.Hashes.Count);
+                    w.Write((uint)2);
+                    w.Write((uint)value.Hashes.Count);
                     foreach (var n in value.Hashes)
                     {
                         OmniHash.Formatter.Serialize(w, n, rank + 1);
@@ -112,7 +112,7 @@ namespace Xeus.Core.Internal
                 if (rank > 256) throw new FormatException();
 
                 // Read property count
-                int propertyCount = (int)r.GetUInt64();
+                uint propertyCount = r.GetUInt32();
 
                 CorrectionAlgorithmType p_correctionAlgorithmType = default;
                 ulong p_length = default;
@@ -120,7 +120,7 @@ namespace Xeus.Core.Internal
 
                 for (; propertyCount > 0; propertyCount--)
                 {
-                    int id = (int)r.GetUInt64();
+                    uint id = r.GetUInt32();
                     switch (id)
                     {
                         case 0: // CorrectionAlgorithmType
@@ -130,12 +130,12 @@ namespace Xeus.Core.Internal
                             }
                         case 1: // Length
                             {
-                                p_length = (ulong)r.GetUInt64();
+                                p_length = r.GetUInt64();
                                 break;
                             }
                         case 2: // Hashes
                             {
-                                var length = (int)r.GetUInt64();
+                                var length = r.GetUInt32();
                                 p_hashes = new OmniHash[length];
                                 for (int i = 0; i < p_hashes.Count; i++)
                                 {
@@ -204,16 +204,16 @@ namespace Xeus.Core.Internal
 
                 // Write property count
                 {
-                    int propertyCount = 0;
+                    uint propertyCount = 0;
                     if (value.Sections.Count != 0) propertyCount++;
-                    w.Write((ulong)propertyCount);
+                    w.Write(propertyCount);
                 }
 
                 // Sections
                 if (value.Sections.Count != 0)
                 {
-                    w.Write((ulong)0);
-                    w.Write((ulong)value.Sections.Count);
+                    w.Write((uint)0);
+                    w.Write((uint)value.Sections.Count);
                     foreach (var n in value.Sections)
                     {
                         MerkleTreeSection.Formatter.Serialize(w, n, rank + 1);
@@ -226,18 +226,18 @@ namespace Xeus.Core.Internal
                 if (rank > 256) throw new FormatException();
 
                 // Read property count
-                int propertyCount = (int)r.GetUInt64();
+                uint propertyCount = r.GetUInt32();
 
                 IList<MerkleTreeSection> p_sections = default;
 
                 for (; propertyCount > 0; propertyCount--)
                 {
-                    int id = (int)r.GetUInt64();
+                    uint id = r.GetUInt32();
                     switch (id)
                     {
                         case 0: // Sections
                             {
-                                var length = (int)r.GetUInt64();
+                                var length = r.GetUInt32();
                                 p_sections = new MerkleTreeSection[length];
                                 for (int i = 0; i < p_sections.Count; i++)
                                 {
